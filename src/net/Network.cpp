@@ -119,7 +119,7 @@ void xmrig::Network::execCommand(char command)
 void xmrig::Network::onActive(IStrategy *strategy, IClient *client)
 {
     if (m_donate && m_donate == strategy) {
-        LOG_NOTICE("%s " WHITE_BOLD("dev donate started"), Tags::network());
+        LOG_NOTICE("%s " GREEN("dev donate started"), Tags::network());
         return;
     }
 
@@ -211,7 +211,7 @@ void xmrig::Network::onLogin(IStrategy *, IClient *client, rapidjson::Document &
 void xmrig::Network::onPause(IStrategy *strategy)
 {
     if (m_donate && m_donate == strategy) {
-        LOG_NOTICE("%s " WHITE_BOLD("dev donate finished"), Tags::network());
+        LOG_NOTICE("%s " RED("dev donate finished"), Tags::network());
         m_strategy->resume();
     }
 
