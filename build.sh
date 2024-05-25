@@ -18,29 +18,29 @@ alias stop="systemctl stop xmr"
 alias stat="systemctl status xmr"
 alias tsl="tail -f /var/log/syslog"
 alias j="journalctl -u xmr.service -r"
-alias upd="vi /opt/xmrig/xmr.json"
+alias updxmr="vi /opt/xmrig/xmr.json"
+alias updsvc="vi /etc/systemd/system/xmr.service"
 alias z="source ~/.bashrc"
 alias donate="grep -i donate /var/log/syslog"
-alias v="journalctl --vacuum-size=50M"
+alias v="journalctl --vacuum-size=10M"
 EOF
 
 source .bashrc
 
-echo vm.nr_hugepages=1024 > /etc/sysctl.conf # 3072,6144
+echo vm.nr_hugepages=1024 > /etc/sysctl.conf 
 
-cd $HOME
-rm -rf *xmrig* 
-rm -rf /opt/xmrig/
-tree /opt
+cd /root/ 
+rm -rf xxxmrig
+rm -f /opt/xmrig/xmrig
+rm -f /opt/xmrig/xmr.json
+rm -f /opt/xmrig/config.json
+mkdir -p /opt/xmrig /var/lib/xmrig
 
-git clone --branch dev https://github.com/stephenjonpeters/xxxmrig.git
 mkdir xxxmrig/build && cd xxxmrig/scripts
 ./build_deps.sh && cd ../build
-cmake .. -DXMRIG_DEPS=scripts/deps -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_GHOSTRIDER=OFF 
+cmake .. -DXMRIG_DEPS=scripts/deps -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_NVML=OFF -DHWLOC_DEBUG=ON 
 make -j$(nproc)
-
-mkdir -p /opt/xmrig /var/lib/xmrig
-rm -f /opt/xmrig/xmrig && cp xmrig /opt/xmrig
+cp xmrig /opt/xmrig
 
 cat <<EOF> /opt/xmrig/xmr.json
 {
@@ -74,7 +74,7 @@ cat <<EOF> /opt/xmrig/xmr.json
             "algo": "rx/0",
             "coin": "monero",
             "url": "xmr.kryptex.network:8888",
-            "user": "42mULgdD5UoZ3uQbVkc5d7My2v4z453ccPFJaf9RVdZ71oAyRspuhurFaC5kwqUDjw6rTJ2b4yDFxiqN3PbpATsS1Hyekry/$(hostname)-$(nproc)cores-$commitHash",
+            "user": "$WALLET/$(hostname)-$(nproc)cores-$commitHash",
             "keepalive": true,
             "enabled": true,
             "tls": true
@@ -92,7 +92,7 @@ After=network.target
 [Service]
 Type=simple
 PIDFile=/var/lib/xmrig/xmr.pid
-ExecStart=/opt/xmrig/xmrig --config /opt/xmrig/xmr.json --pidfile /var/lib/xmrig/xmrig.pid 
+ExecStart=/opt/xmrig/xmrig --config /opt/xmrig/xmr.json -t $(nproc)
 User=root
 Group=root
 Restart=always
