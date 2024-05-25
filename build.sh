@@ -1,6 +1,9 @@
 commitHashLong=$(git rev-parse HEAD)
 commitHash=${commitHashLong:0:7}
 read -p "wallet: " WALLET
+PROCS=$(nproc)
+THREADS=$(($PROCS/2))
+
 apt install -y ufw bzip2 plocate logrotate vim tree jq git build-essential cmake automake libtool autoconf libhugetlbfs-bin numactl jsonlint vim syslinux-utils lm-sensors neofetch jq msr-tools xclip
 modprobe msr
 
@@ -78,7 +81,7 @@ cat <<EOF> /opt/xmrig/config.json
             "algo": "rx/0",
             "coin": "monero",
             "url": "xmr.kryptex.network:8888",
-            "user": "$WALLET/$(hostname)-$(nproc)cores-$commitHash",
+            "user": "$WALLET/$(hostname)-$THREADSthreads-$commitHash",
             "keepalive": true,
             "enabled": true,
             "tls": true
