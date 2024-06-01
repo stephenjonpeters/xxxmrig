@@ -1,24 +1,32 @@
 commitHashLong=$(git rev-parse HEAD)
 commitHash=${commitHashLong:0:7}
 read -p "wallet: " WALLET
+read -p "git token: " GITTOKEN
 PROCS=$(nproc)
 THREADS=$(($PROCS/2))
+export TS=$(date +"%Y%m%d-%H%M")
 
-#https://wiki.alpinelinux.org/wiki/Alpine_setup_scripts#setup-sshd
-setup-alpine
+cd
 
-apk add util-linux pciutils hwdata-pci usbutils hwdata-usb coreutils binutils findutils grep iproute2 vim wget plocate git ufw 
+cat <<EOF> /etc/apk/repositories
+#/media/sda/apks
+http://mirror.leaseweb.com/alpine/v3.20/main
+http://mirror.leaseweb.com/alpine/v3.20/community
+EOF
 
+apk -U upgrade
 
-#https://pkgs.alpinelinux.org/package/edge/main/x86_64/linux-firmware-radeon
-apk install linux-firmware-radeon
+apk add util-linux pciutils hwdata-pci usbutils hwdata-usb coreutils binutils findutils grep iproute2 vim wget findutils-locate linux-firmware-radeon linux-firmware-amdgpu git make cmake libstdc++ gcc g++ automake libtool autoconf linux-headers ufw
 
-#https://pkgs.alpinelinux.org/package/edge/main/x86_64/linux-firmware-amdgpu
-#apk install linux-firmware-amdgpu
+apk -U upgrade
 
-#https://xmrig.com/docs/miner/build/alpine
+rc-update add iptables 
+rc-update add ip6tables
+rc-update add ufw
 
-sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="msr.allow_writes=on"/'  /etc/default/grub
+cat <<EOF>> /etc/default/grub
+GRUB_CMDLINE_LINUX="msr.allow_writes=on"
+EOF
 update-grub
 
 git config --global user.email "stephenjonpeters@icloud.com"
@@ -34,10 +42,11 @@ cat <<EOF>> /etc/hosts
 192.168.0.60 xmrig6
 EOF
 
-cp ~/.bashrc ~/.bashrc.$TS
-cat <<EOF>> ~/.bashrc
+cat <<EOF> ~/.bashrc
 VISUAL="vim" ; export VISUAL
 EDITOR="\$VISUAL" ; export EDITOR
+alias h="history"
+alias l="ls -ltr"
 EOF
 
 cat <<EOF> ~/.vimrc
@@ -45,7 +54,7 @@ set mouse=v
 set number
 EOF
 
-source .bashrc
+source /root/.bashrc
 
 cp /etc/security/limits.conf /etc/security/limits.conf.$TS
 cat <<EOF>>  /etc/security/limits.conf
@@ -53,30 +62,20 @@ echo root hard nofile 1048576
 echo root soft nofile 1048576
 EOF
 
-cp  /etc/sysctl.conf  /etc/sysctl.conf.$TS
-cat <<EOF> /etc/sysctl.conf
-vm.nr_hugepages=1024
-kernel.shmmax = 3254779904
-vm.hugetlb_shm_group = 0
-vm.min_free_kbytes = 112640
-EOF
-
-
 cd /root/ 
 rm -rf xxxmrig
 rm -f /opt/xmrig/xmrig
-rm -f /opt/xmrig/xmr.json
 rm -f /opt/xmrig/config.json
 mkdir -p /opt/xmrig /var/lib/xmrig
 
-apk add git make cmake libstdc++ gcc g++ automake libtool autoconf linux-headers
+#https://xmrig.com/docs/miner/build/alpine
 
-cp xxxmrig/src/config.json /opt/xmrig
+git clone https://$GITTOKEN@github.com/stephenjonpeters/xxxmrig.git
 mkdir xxxmrig/build && cd xxxmrig/scripts
 ./build_deps.sh && cd ../build
 cmake .. -DXMRIG_DEPS=scripts/deps -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_NVML=OFF -DHWLOC_DEBUG=ON 
 make -j$(nproc)
-cp xmrig /opt/xmrig
+cp xmrig /opt/xmrig/xmrig
 
 cat <<EOF> /opt/xmrig/config.json
 {
@@ -110,7 +109,7 @@ cat <<EOF> /opt/xmrig/config.json
             "algo": "rx/0",
             "coin": "monero",
             "url": "xmr.kryptex.network:8888",
-            "user": "$WALLET/$(hostname)-$THREADSthreads-$commitHash",
+            "user": "42mULgdD5UoZ3uQbVkc5d7My2v4z453ccPFJaf9RVdZ71oAyRspuhurFaC5kwqUDjw6rTJ2b4yDFxiqN3PbpATsS1Hyekry/$(hostname)",
             "keepalive": true,
             "enabled": true,
             "tls": true
@@ -122,4 +121,28 @@ cat <<EOF> /opt/xmrig/config.json
     "print-time": 60
 }
 EOF
+
+nohup /opt/xmrig/xmrig &
+
+
+/etc/init.d/
+#!/sbin/openrc-run
+
+name="busybox watchdog"
+command="/sbin/watchdog"
+command_args="${WATCHDOG_OPTS} -F ${WATCHDOG_DEV}"
+pidfile="/run/watchdog.pid"
+command_background=true
+
+depend() {
+	need dev
+	after hwdrivers
+}
+
+start_pre() {
+	if ! [ -n "$WATCHDOG_DEV" ]; then
+		eerror "WATCHDOG_DEV is not set"
+		return 1
+	fi
+}
 
