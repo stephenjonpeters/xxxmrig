@@ -14,6 +14,15 @@ http://mirror.leaseweb.com/alpine/v3.20/main
 http://mirror.leaseweb.com/alpine/v3.20/community
 EOF
 
+cat <<EOF> ~/.profile
+VISUAL="vim" ; export VISUAL
+EDITOR="\$VISUAL" ; export EDITOR
+alias h="history"
+alias t="tail -f /var/log/messages"
+alias x="cd /opt/xmrig; ls -ltr"
+alias z="source ~/.bashrc"
+EOF
+
 apk -U upgrade
 
 apk add util-linux pciutils hwdata-pci usbutils hwdata-usb coreutils binutils findutils grep iproute2 vim wget findutils-locate linux-firmware-radeon linux-firmware-amdgpu git make cmake libstdc++ gcc g++ automake libtool autoconf linux-headers ufw
@@ -42,12 +51,6 @@ cat <<EOF>> /etc/hosts
 192.168.0.60 xmrig6
 EOF
 
-cat <<EOF> ~/.bashrc
-VISUAL="vim" ; export VISUAL
-EDITOR="\$VISUAL" ; export EDITOR
-alias h="history"
-alias l="ls -ltr"
-EOF
 
 cat <<EOF> ~/.vimrc
 set mouse=v
@@ -108,8 +111,9 @@ cat <<EOF> /opt/xmrig/config.json
         {
             "algo": "rx/0",
             "coin": "monero",
-            "url": "xmr.kryptex.network:8888",
-            "user": "42mULgdD5UoZ3uQbVkc5d7My2v4z453ccPFJaf9RVdZ71oAyRspuhurFaC5kwqUDjw6rTJ2b4yDFxiqN3PbpATsS1Hyekry/$(hostname)",
+            "url": "monerohash.com:9999",
+            "user": "42mULgdD5UoZ3uQbVkc5d7My2v4z453ccPFJaf9RVdZ71oAyRspuhurFaC5kwqUDjw6rTJ2b4yDFxiqN3PbpATsS1Hyekry",
+            "pass": $(hostname)
             "keepalive": true,
             "enabled": true,
             "tls": true
