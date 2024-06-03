@@ -20,10 +20,10 @@ EDITOR="\$VISUAL" ; export EDITOR
 alias h="history"
 alias t="tail -f /var/log/messages"
 alias x="cd /opt/xmrig; ls -ltr"
-alias z="source ~/.bashrc"
+alias z="source ~/.profile"
 EOF
 
-apk -U upgrade
+source /root/.profile
 
 apk add util-linux pciutils hwdata-pci usbutils hwdata-usb coreutils binutils findutils grep iproute2 vim wget findutils-locate linux-firmware-radeon linux-firmware-amdgpu git make cmake libstdc++ gcc g++ automake libtool autoconf linux-headers ufw
 
@@ -49,6 +49,7 @@ cat <<EOF>> /etc/hosts
 192.168.0.40 xmrig4
 192.168.0.50 xmrig5
 192.168.0.60 xmrig6
+192.168.0.101 oldmac
 EOF
 
 
@@ -57,7 +58,6 @@ set mouse=v
 set number
 EOF
 
-source /root/.bashrc
 
 cp /etc/security/limits.conf /etc/security/limits.conf.$TS
 cat <<EOF>>  /etc/security/limits.conf
@@ -69,11 +69,10 @@ cd /root/
 rm -rf xxxmrig
 rm -f /opt/xmrig/xmrig
 rm -f /opt/xmrig/config.json
-mkdir -p /opt/xmrig /var/lib/xmrig
-
-#https://xmrig.com/docs/miner/build/alpine
+mkdir -p /opt/xmrig /var/lib/xmrig /run/xmrig 
 
 git clone https://$GITTOKEN@github.com/stephenjonpeters/xxxmrig.git
+
 mkdir xxxmrig/build && cd xxxmrig/scripts
 ./build_deps.sh && cd ../build
 cmake .. -DXMRIG_DEPS=scripts/deps -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_NVML=OFF -DHWLOC_DEBUG=ON 
@@ -83,6 +82,7 @@ cp xmrig /opt/xmrig/xmrig
 cat <<EOF> /opt/xmrig/config.json
 {
     "autosave": false,
+    "background": true,
     "randomx": {
         "init": -1,
         "init-avx2": 1,
@@ -111,11 +111,12 @@ cat <<EOF> /opt/xmrig/config.json
         {
             "algo": "rx/0",
             "coin": "monero",
-            "url": "monerohash.com:9999",
+            "url": "chicago01.hashvault.pro:3333",
             "user": "42mULgdD5UoZ3uQbVkc5d7My2v4z453ccPFJaf9RVdZ71oAyRspuhurFaC5kwqUDjw6rTJ2b4yDFxiqN3PbpATsS1Hyekry",
-            "pass": $(hostname)
+            "pass": "",
             "keepalive": true,
             "enabled": true,
+             "tls-fingerprint": "420c7850e09b7c0bdcf748a7da9eb3647daf8515718f36d9ccfdd6b9ff834b14",
             "tls": true
         }
     ],
@@ -126,27 +127,18 @@ cat <<EOF> /opt/xmrig/config.json
 }
 EOF
 
-nohup /opt/xmrig/xmrig &
 
 
-/etc/init.d/
+cat <<EOF>/etc/init.d/xmrig
 #!/sbin/openrc-run
+name="xmrig"
+command="/opt/xmrig/xmrig"
+EOF
 
-name="busybox watchdog"
-command="/sbin/watchdog"
-command_args="${WATCHDOG_OPTS} -F ${WATCHDOG_DEV}"
-pidfile="/run/watchdog.pid"
-command_background=true
+chmod +xxx /etc/init.d/xmrig
 
-depend() {
-	need dev
-	after hwdrivers
-}
+rc-update add xmrig
 
-start_pre() {
-	if ! [ -n "$WATCHDOG_DEV" ]; then
-		eerror "WATCHDOG_DEV is not set"
-		return 1
-	fi
-}
+rc-status -s | grep xmrig
 
+rc-service xmrig start
