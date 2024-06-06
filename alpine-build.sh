@@ -25,13 +25,20 @@ EOF
 
 source /root/.profile
 
-apk add util-linux pciutils hwdata-pci usbutils hwdata-usb coreutils binutils findutils grep iproute2 vim wget findutils-locate linux-firmware-radeon linux-firmware-amdgpu git make cmake libstdc++ gcc g++ automake libtool autoconf linux-headers ufw
+apk add util-linux pciutils hwdata-pci usbutils hwdata-usb coreutils binutils findutils grep iproute2 vim wget findutils-locate linux-firmware-radeon linux-firmware-amdgpu git make cmake libstdc++ gcc g++ automake libtool autoconf linux-headers ufw logrotate hwloc-tools
 
 apk -U upgrade
 
 rc-update add iptables 
 rc-update add ip6tables
 rc-update add ufw
+
+cat <<EOF>> /etc/logrotate.conf
+/var/log/messages {
+    rotate 2
+    daily 
+}
+EOF
 
 cat <<EOF>> /etc/default/grub
 GRUB_CMDLINE_LINUX="msr.allow_writes=on"
@@ -133,7 +140,11 @@ cat <<EOF>/etc/init.d/xmrig
 #!/sbin/openrc-run
 name="xmrig"
 command="/opt/xmrig/xmrig"
+command_args_foreground="--foreground"
+supervisor="supervise-daemon"
+pidfile="/run/xmrig.pid"
 EOF
+
 
 chmod +xxx /etc/init.d/xmrig
 
