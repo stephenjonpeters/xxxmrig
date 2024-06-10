@@ -1,12 +1,18 @@
 apk update 
 
-apk add  build-essential cmake pkg-config libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libexpat1-dev libpgm-dev qttools5-dev-tools libhidapi-dev libusb-1.0-0-dev libprotobuf-dev protobuf-compiler libudev-dev libboost-chrono-dev libboost-date-time-dev libboost-filesystem-dev libboost-locale-dev libboost-program-options-dev libboost-regex-dev libboost-serialization-dev libboost-system-dev libboost-thread-dev python3 ccache doxygen graphviz
+apk add monero
 
-apt update && apt upgrade -y
+apk -U upgrade
 
 
 
 cat << EOF > ~/.profile
+VISUAL="vim" ; export VISUAL
+EDITOR="$VISUAL" ; export EDITOR
+alias h="history"
+alias t="tail -f /var/log/messages"
+alias x="cd /opt/xmrig; ls -ltr"
+alias s="grep speed /var/log/messages"
 alias startd="rc-service monerod start"
 alias stopd="rc-service monerod stop"
 alias startx="rc-service xmrig start"
@@ -15,20 +21,16 @@ EOF
 
 source .profile
 
-git config --global user.email 
-git config --global user.name 
+cat <<EOF> /etc/init.d/monerod
+#!/sbin/openrc-run
+name="monerod"
+command="/usr/bin/monerod"
+command_args="--detach" 
+supervisor="supervise-daemon"
+pidfile="/run/monerod.pid"
+EOF
 
-sudo adduser --system --no-create-home --group monero # creates system user account for monero service
-sudo mkdir -p /var/log/monero # logfile goes here
-sudo mkdir -p /var/lib/monero # blockchain database goes here
-
-wget https://downloads.getmonero.org/cli/linux64
-wget https://www.getmonero.org/downloads/hashes.txt #download latest hashes.txt file
-grep $(sha256sum monero-linux-x64-*.tar.bz2) hashes.txt #search hashes.txt file for the computed sha256sum
-
-tar -xvf monero-linux-x64-*.tar.bz2
-sudo mv monero-x86_64-linux-gnu-*/* /usr/local/bin
-sudo chown -R monero:monero /usr/local/bin/monero*
+rc-update add monerod
 
 cat<<EOF>/var/lib/monero/monerod.conf 
 #blockchain data / log locations
@@ -66,49 +68,3 @@ limit-rate-up=1048576 # 1048576 kB/s == 1GB/s; a raise from default 2048 kB/s; c
 limit-rate-down=1048576 # 1048576 kB/s == 1GB/s; a raise from default 8192 kB/s; allow for faster initial sync
 EOF
 
-sudo chown -R monero:monero /var/lib/monero 
-sudo chown -R monero:monero /var/log/monero
-
-cat<<EOF>/etc/systemd/system/monerod.service
-[Unit]
-Description=monerod
-After=network.target
-[Service]
-Type=forking
-PIDFile=/var/lib/monero/monerod.pid
-ExecStart=/usr/local/bin/monerod --config-file /var/lib/monero/monerod.conf --pidfile /var/lib/monero/monerod.pid --detach
-User=monero
-Group=monero
-Restart=always
-RestartSec=5
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable monerod
-sudo systemctl restart monerod
-sudo systemctl status monerod
-
-cat<<EOF>/etc/systemd/system/monero.service
-[Unit]
-Description=monero
-After=network.target
-[Service]
-Type=simple
-PIDFile=/var/lib/monero/monero.pid
-ExecStart=/usr/local/bin/monerod start_mining 42mULgdD5UoZ3uQbVkc5d7My2v4z453ccPFJaf9RVdZ71oAyRspuhurFaC5kwqUDjw6rTJ2b4yDFxiqN3PbpATsS1Hyekr 16 
-User=monero
-Group=monero
-Restart=always
-RestartSec=5
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable monero
-sudo systemctl restart monero
-sudo systemctl status monero
-
-echo "done!"
