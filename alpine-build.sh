@@ -14,6 +14,8 @@ http://mirror.leaseweb.com/alpine/v3.20/main
 http://mirror.leaseweb.com/alpine/v3.20/community
 EOF
 
+apk add git make cmake libstdc++ gcc g++ libuv-dev openssl-dev hwloc-dev sudo python3 vim wget logrotate findutils-locate  linux-firmware-radeon linux-firmware-amdgpu automake libtool autoconf linux-headers
+
 cat <<EOF> ~/.profile
 VISUAL="vim" ; export VISUAL
 EDITOR="\$VISUAL" ; export EDITOR
@@ -22,22 +24,23 @@ alias t="tail -f /var/log/messages"
 alias x="cd /opt/xmrig; ls -ltr"
 alias z="source ~/.profile"
 alias s="grep speed /var/log/messages"
-alias startd="rc-service monerod start"
-alias stopd="rc-service monerod stop"
-alias startx="rc-service xmrig start"
-alias stopx="rc-service xmrig stop"
-alias statusd="monerod status"
+alias start="rc-service xmrig start"
+alias stop="rc-service xmrig stop"
+alias status="rc-service xmrig status"
+EOF
+
+cat <<EOF> ~/.vimrc
+set mouse=v
+set number
 EOF
 
 source /root/.profile
-
-apk add util-linux pciutils hwdata-pci usbutils hwdata-usb coreutils binutils findutils grep iproute2 vim wget findutils-locate linux-firmware-radeon linux-firmware-amdgpu git make cmake libstdc++ gcc g++ automake libtool autoconf linux-headers ufw logrotate hwloc-tools btop sudo python3
 
 #sudoers
 echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL'  > /etc/sudoers.d/wheel
 adduser xmrig wheel
 
-apk -U upgrade
+#apk -U upgrade
 
 cat <<EOF>> /etc/logrotate.conf
 /var/log/messages {
@@ -52,10 +55,8 @@ EOF
 
 update-grub
 
-git config --global user.email "stephenjonpeters@icloud.com"
-git config --global user.name "Steve Peters"
+reboot
 
-cp /etc/hosts /etc/hosts.$TS
 cat <<EOF>> /etc/hosts
 192.168.0.10 xmrig1
 192.168.0.20 xmrig2
@@ -69,24 +70,16 @@ cat <<EOF>> /etc/hosts
 EOF
 
 
-cat <<EOF> ~/.vimrc
-set mouse=v
-set number
-EOF
-
-
-cp /etc/security/limits.conf /etc/security/limits.conf.$TS
-cat <<EOF>>  /etc/security/limits.conf
-echo root hard nofile 1048576
-echo root soft nofile 1048576
-EOF
-
 rm -rf xxxmrig
 rm -f /opt/xmrig/xmrig
 rm -f /opt/xmrig/config.json
 
 cd /root/ 
 mkdir -p /opt/xmrig /var/lib/xmrig 
+
+git config --global user.email "stephenjonpeters@icloud.com"
+git config --global user.name "Steve Peters"
+
 
 git clone https://$GITTOKEN@github.com/stephenjonpeters/xxxmrig.git
 
@@ -99,7 +92,7 @@ cp xmrig /opt/xmrig/xmrig
 cat <<EOF> /opt/xmrig/config.json
 {
     "autosave": false,
-    "background": true,
+    "background": false,
     "randomx": {
         "init": -1,
         "init-avx2": 1,
@@ -111,7 +104,7 @@ cat <<EOF> /opt/xmrig/config.json
         "enabled": true,
         "huge-pages": true,
         "huge-pages-jit": false,
-        "priority": 5,
+        "priority": null,
         "max-threads-hint": 100,
         "asm": "ryzen",
         "yield": false,
@@ -150,7 +143,7 @@ cat <<EOF>/etc/init.d/xmrig
 #!/sbin/openrc-run
 name="xmrig"
 command="/opt/xmrig/xmrig"
-command_args_foreground="--foreground"
+command_args="--foreground"
 supervisor="supervise-daemon"
 pidfile="/run/xmrig.pid"
 EOF
@@ -160,7 +153,6 @@ chmod +xxx /etc/init.d/xmrig
 
 rc-update add xmrig
 
-rc-service xmrig start
-rc-service xmrig status
-tx
+start
+status
 
