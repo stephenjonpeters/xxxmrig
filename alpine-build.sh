@@ -36,10 +36,6 @@ EOF
 
 source /root/.profile
 
-#sudoers
-echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL'  > /etc/sudoers.d/wheel
-adduser xmrig wheel
-
 #apk -U upgrade
 
 cat <<EOF>> /etc/logrotate.conf
@@ -66,6 +62,7 @@ cat <<EOF>> /etc/hosts
 192.168.0.60 xmrig6
 192.168.0.70 xmrig7
 192.168.0.80 xmrig8
+192.168.0.90 xmrig9
 192.168.0.101 oldmac
 EOF
 
@@ -123,7 +120,7 @@ cat <<EOF> /opt/xmrig/config.json
             "coin": "monero",
             "url": "chicago01.hashvault.pro:3333",
             "user": "42mULgdD5UoZ3uQbVkc5d7My2v4z453ccPFJaf9RVdZ71oAyRspuhurFaC5kwqUDjw6rTJ2b4yDFxiqN3PbpATsS1Hyekry",
-            "pass": "xmrig8",
+            "pass": "xmrig9",
             "keepalive": true,
             "enabled": true,
              "tls-fingerprint": "420c7850e09b7c0bdcf748a7da9eb3647daf8515718f36d9ccfdd6b9ff834b14",
