@@ -51,8 +51,6 @@ EOF
 
 update-grub
 
-reboot
-
 cat <<EOF>> /etc/hosts
 192.168.0.10 xmrig1
 192.168.0.20 xmrig2
@@ -66,6 +64,7 @@ cat <<EOF>> /etc/hosts
 192.168.0.101 oldmac
 EOF
 
+reboot
 
 rm -rf xxxmrig
 rm -f /opt/xmrig/xmrig
@@ -74,11 +73,8 @@ rm -f /opt/xmrig/config.json
 cd /root/ 
 mkdir -p /opt/xmrig /var/lib/xmrig 
 
-git config --global user.email "stephenjonpeters@icloud.com"
-git config --global user.name "Steve Peters"
 
-
-git clone https://$GITTOKEN@github.com/stephenjonpeters/xxxmrig.git
+#git clone https://$GITTOKEN@github.com/stephenjonpeters/xxxmrig.git
 
 mkdir xxxmrig/build && cd xxxmrig/scripts
 ./build_deps.sh && cd ../build
